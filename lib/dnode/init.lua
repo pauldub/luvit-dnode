@@ -10,15 +10,18 @@ local function listen(self, cons, port, opts)
     self.sessions:rpush(socket)
     local session_id = self.sessions.last  
     
+    print('sess id', session_id)
     d:on('end', function()
+      print('conn end', session_id)
+      socket:destroy()
       self.sessions.list[session_id] = nil
       self.sessions = Queue:new(self.sessions.list)
     end)
 
-    d:on('error', function(err)
+    socket:on('error', function(err)
       print(err)
-      print_keys(err)
-      d:emit('error', err)
+      d:destroy()
+      socket:done()
     end)
     
     d.stream = socket

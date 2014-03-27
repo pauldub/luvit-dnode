@@ -1,4 +1,5 @@
 local core = require('core')
+local native = require('uv_native')
 local iStream = require('core').iStream
 local fun = require('lua-functional/lua-functional')
 local json = require('json4lua/json4lua/json/json.lua')
@@ -44,7 +45,11 @@ function Scrubber:scrub(obj)
   return { arguments = args, callbacks = paths, links = links }
 end
 
-function Scrubber:unscrub(id, cb)
+function Scrubber:unscrub(msg, f)
+  local args = msg.arguments or {}
+  -- TODO: Unscrub things.
+
+  return args
 end
 
 --local Protocol = require('./proto')
@@ -52,7 +57,7 @@ local Protocol = core.Emitter:extend()
 function Protocol:initialize(cons, opts)
 	self.opts = opts or {}
 	self.remote = {}
-	self.callbacks = { locals = {}, remote = {} }
+	self.callbacks = { locals = {}, remote = Queue:new() }
 	self.wrap = self.opts.wrap	
 	self.unwrap = self.opts.unwrap
 	
@@ -68,7 +73,7 @@ end
 
 function Protocol:request(method, args)
 	local scrub = self.scrubber:scrub(args)
-	
+  print('proto - request')	
 	self:emit('request', {
 		method = method,
 		arguments = scrub.arguments,
@@ -78,40 +83,63 @@ function Protocol:request(method, args)
 end
 
 function Protocol:handle(req)
-	local args = self.scrubber:unscrub(req, function(id)
-		if self.callbacks.remote[id] == false then
-			local cb = function() 
-				-- TODO: Here args is probably wrong...
-        error('in cb')
-				self:request(id, args)
-			end	
+	local args = self.scrubber:unscrub(req)
+  local remote_cb, id
 
-			self.callbacks.remote[id] = self.wrap and self.wrap(cb, id) or cb
-		end	
-
-		local remote_cb = self.callbacks.remote[id]
-
-		return self.unwrap and self.unwrap(remote_cb, id) or remote_cb
-	end)
+  -- for k,v in pairs(self.callbacks.remote) do
+    -- if v == cb then
+      -- remote_cb = k
+    -- end
+  -- end
+	-- if remote_cb == nil then
+    -- id = #self.callbacks.remote.list + 1
+		-- local cb = function() 
+			-- -- TODO: Here args is probably wrong...
+       -- print('in cb')
+			-- self:request(id, args)
+		-- end	
+-- 
+    -- self.callbacks.remote:rpush(cb)
+    -- print('remote-cb id', id)
+		-- remote_cb = self.wrap and self:wrap(cb, id) or cb
+  -- else
+    -- id = remote_cb
+    -- print('remote_cb k:', k)
+    -- remote_cb = self.callbacks.remote[id]
+  -- end	
 
   print('proto - handle args')
-  -- print_keys(args)
-  print(args, req)
-  if req == nil then
-    error('request is nil')
-  end
+  print('proto - req.method:', req.method, type(req.method))
+  print(args)
+  print_keys(req)
 
-  if req.method == 'methods' then
+  if req.method == 'methods' and #args > 0 then
+    -- Validate args.
 		self.handleMethods(args[1])
 	elseif req.method == 'cull' then
 	  for i,id in ipairs(args) do
       self.callbacks.remote[id] = nil
     end
-  elseif req.method == 'string' then
-    if isEnumerable(self.instance, method) then
-      fun.apply(self.instance[req.method], args)
+  elseif type(req.method) == 'string' then
+    local method = self.instance[req.method]
+    print('proto - method:', method, 'type:', type(method))
+    if method and type(method) == 'function' then
+      print('proto - apply instance func:', req.method)
+      local result
+      local status, err = pcall(function()
+        method(unpack(args), function(res)
+          print('proto - request res:', res)
+          result = res
+        end)
+      end) 
+      if err then
+        print('proto - error:', err)
+        -- TODO: return it?
+      else
+        return result
+      end
     end
-  elseif req.method == 'number' then
+  elseif type(req.method) == 'number' then
     local fn = self.callbacks.locals[req.method]
     if fn == nil then
       self:emit('fail', 'no such method')
@@ -143,22 +171,23 @@ function Server:initialize(cons, opts)
 
 	self.queue = {}
 
-	-- TODO: Schedule initialization
-	if self.ended then 
-		return 
-	end
+  process.nextTick(function()
+	  if self.ended then 
+		  return 
+	  end
 	
-	self.proto = self:createProto()
-	self.proto:start()
+	  self.proto = self:createProto()
+	  self.proto:start()
+  
+	  if self.handle_queue == nil then
+		  return
+	  end
 
-	if self.handle_queue == nil then
-		return
-	end
-
-	-- TODO: Use lua async or lua functional for list ops.
-	for i,row in ipairs(self.queue) do
-		self:handle(self.queue[i])
-	end
+	  -- TODO: Use lua async or lua functional for list ops.
+	  for i,row in ipairs(self.queue) do
+		  self:handle(self.queue[i])
+	  end
+  end)
 end
 
 function Server:createProto()
@@ -189,7 +218,7 @@ function Server:createProto()
 			self:emit('data', req)
 		else
 			-- TODO: Stringify json?
-			self:emit('data', req)
+			self:emit('data', json.encode(req))
 		end
 	end)
 
@@ -217,8 +246,10 @@ function Server:write(buf)
     buf:gsub('.', function(c)
       -- print(c:byte())
       if c:byte() == 0x0a then
-        -- TODO: Parse json message
-        local status, err = pcall(json.decode, self._line)
+        local row
+        local status, err = pcall(function()
+          row = json.decode(self._line)
+        end)
         if err then
           print('server - cannot parse json:', err)
           self:destroy()
@@ -235,8 +266,8 @@ end
 function Server:handle(row)
 	if self.proto == nil then
 		print("server - handle no proto")
-		self.handle_queue = self.handle_queue or {}
-		self.handle_queue:push(row)
+		self.handle_queue = self.handle_queue or Queue:new()
+		self.handle_queue:rpush(row)
 		return
 	else
 		print("server - handle proto")
@@ -258,5 +289,6 @@ function Server:destroy()
 	
 	self:emit('end')
 end
+
 
 return Server
