@@ -1,10 +1,11 @@
-local core = require('core')
-local native = require('uv_native')
+local Emitter = require('core').Emitter
 local iStream = require('core').iStream
-local fun = require('lua-functional/lua-functional')
 local json = require('json4lua/json4lua/json/json.lua')
 
+local utils = require('utils')
+local string = require('string')
 local Queue = require('./queue')
+local Scrubber = require('./scrubber')
 
 function print_keys(table)
   for k,_ in pairs(table) do
@@ -12,161 +13,21 @@ function print_keys(table)
   end 
 end
 
-local Scrubber = core.Emitter:extend()
-function Scrubber:initialize(callbacks)
-  self.callbacks = Queue:new(callbacks)
-end
-
-function Scrubber:scrub(obj)
-  local paths = {}
-  local links = {}
-
-  local args = fun.map(function(node)
-    if node then
-      local index = nil
-      for i, cb in ipairs(self.callbacks.list) do
-        if cb == node then
-          index = i 
-        end
-      end
-      
-      if index and index > 0 and not paths[index] then
-        error('ctx.path?')
-        paths[i] = ctx.path
-      else
-        self.callbacks:rpush(node)
-        local id = self.callbacks.last
-        paths[id] = self.callbacks.list[id]
-      end
-    else  
-      print("I failed because im badly implemented")
-    end 
-  end, obj)
-  return { arguments = args, callbacks = paths, links = links }
-end
-
-function Scrubber:unscrub(msg, f)
-  local args = msg.arguments or {}
-  -- TODO: Unscrub things.
-
-  return args
-end
-
---local Protocol = require('./proto')
-local Protocol = core.Emitter:extend()
-function Protocol:initialize(cons, opts)
-	self.opts = opts or {}
-	self.remote = {}
-	self.callbacks = { locals = {}, remote = Queue:new() }
-	self.wrap = self.opts.wrap	
-	self.unwrap = self.opts.unwrap
-	
-	self.scrubber = Scrubber:new(self.callbacks.locals)
-
-	self.instance = cons(self.remote, self)
-end
-
-function Protocol:start()
-	print("protocol started")
-	self:request('methods', { self.instance } )
-end
-
-function Protocol:request(method, args)
-	local scrub = self.scrubber:scrub(args)
-  print('proto - request')	
-	self:emit('request', {
-		method = method,
-		arguments = scrub.arguments,
-		callbacks = scrub.callbacks,
-		links = scrub.links
-	})
-end
-
-function Protocol:handle(req)
-	local args = self.scrubber:unscrub(req)
-  local remote_cb, id
-
-  -- for k,v in pairs(self.callbacks.remote) do
-    -- if v == cb then
-      -- remote_cb = k
-    -- end
-  -- end
-	-- if remote_cb == nil then
-    -- id = #self.callbacks.remote.list + 1
-		-- local cb = function() 
-			-- -- TODO: Here args is probably wrong...
-       -- print('in cb')
-			-- self:request(id, args)
-		-- end	
--- 
-    -- self.callbacks.remote:rpush(cb)
-    -- print('remote-cb id', id)
-		-- remote_cb = self.wrap and self:wrap(cb, id) or cb
-  -- else
-    -- id = remote_cb
-    -- print('remote_cb k:', k)
-    -- remote_cb = self.callbacks.remote[id]
-  -- end	
-
-  print('proto - handle args')
-  print('proto - req.method:', req.method, type(req.method))
-  print(args)
-  print_keys(req)
-
-  if req.method == 'methods' and #args > 0 then
-    -- Validate args.
-		self.handleMethods(args[1])
-	elseif req.method == 'cull' then
-	  for i,id in ipairs(args) do
-      self.callbacks.remote[id] = nil
-    end
-  elseif type(req.method) == 'string' then
-    local method = self.instance[req.method]
-    print('proto - method:', method, 'type:', type(method))
-    if method and type(method) == 'function' then
-      print('proto - apply instance func:', req.method)
-      local result
-      local status, err = pcall(function()
-        method(unpack(args), function(res)
-          print('proto - request res:', res)
-          result = res
-        end)
-      end) 
-      if err then
-        print('proto - error:', err)
-        -- TODO: return it?
-      else
-        return result
-      end
-    end
-  elseif type(req.method) == 'number' then
-    local fn = self.callbacks.locals[req.method]
-    if fn == nil then
-      self:emit('fail', 'no such method')
-    else
-      fun.apply(fn, args)
-    end
-	end
-end
-
-function Protocol:handleMethods(methods)
-  for k,_ in pairs(self.remote) do
-    self.remote[k] = nil
-  end
-  for k,m in pairs(methods) do
-    self.remote[k] = m
-  end
-
-  self:emit('remote', self.remote)
-end
+local Protocol = require('./proto')
 
 local Server = iStream:extend()
 function Server:initialize(cons, opts)
 	self.opts = opts or {}
 
-	self.cons = cons
+  if type(cons) == 'function' then
+	  self.cons = cons
+  else
+    self.cons = function()
+      return cons
+    end
+  end
 
-	self.readable = true
+  self.readable = true
 	self.writable = true
 
 	self.queue = {}
@@ -177,6 +38,7 @@ function Server:initialize(cons, opts)
 	  end
 	
 	  self.proto = self:createProto()
+    print('server - starting')
 	  self.proto:start()
   
 	  if self.handle_queue == nil then
@@ -187,8 +49,7 @@ function Server:initialize(cons, opts)
 	  for i,row in ipairs(self.queue) do
 		  self:handle(self.queue[i])
 	  end
-  end)
-end
+  end) end
 
 function Server:createProto()
 	local proto = Protocol:new(function(proto, remote)
@@ -198,7 +59,14 @@ function Server:createProto()
 			return
 		end
 
-		local ref = self.cons(self, proto, remote)
+    print('server - remote', utils.dump(remote))
+
+		local ref 
+    if type(self.cons) == 'function' then
+      ref = self.cons(self, proto, remote)
+    else
+      ref = {}
+    end
 
 		self:emit('local', ref, self)
 
@@ -218,6 +86,7 @@ function Server:createProto()
 			self:emit('data', req)
 		else
 			-- TODO: Stringify json?
+      print('server - emit data', utils.dump(req))
 			self:emit('data', json.encode(req))
 		end
 	end)
@@ -238,13 +107,12 @@ function Server:write(buf)
     return
   end
 
-  print(type(buf))
   if buf and type(buf) == 'string' then
     if self._line == nil then
       self._line = ''
     end    
+    local handled 
     buf:gsub('.', function(c)
-      -- print(c:byte())
       if c:byte() == 0x0a then
         local row
         local status, err = pcall(function()
@@ -254,12 +122,26 @@ function Server:write(buf)
           print('server - cannot parse json:', err)
           self:destroy()
         end
+        print('server - write row', row)
         self._line = ''
         self:handle(row)
+        handled = true
       else
         self._line = self._line .. c
       end
     end)
+    if handled == nil then
+      local row
+      local status, err = pcall(function()
+        row = json.decode(buf)
+      end)
+      if err then
+        print('server - cannot parse json buf:', err)
+        self:destroy()
+      end
+      print('server - write buf row', row)
+      self:handle(row)
+    end
   end
 end
 

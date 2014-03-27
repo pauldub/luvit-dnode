@@ -1,7 +1,26 @@
 local net = require('net')
 
 local Server = require('./server')
+local Client = require('./client')
 local Queue = require('./queue')
+
+local function connect(self, port, block)
+  local self = Server:new({}, opts)
+
+  self:on('remote', block)
+
+  socket = net.createConnection(port, function()
+    socket:on('error', function(err)
+      print(err)
+      self:emit('error', err)
+      socket:done()
+    end)  
+    self.stream = socket
+    socket:pipe(self)
+    self:pipe(socket) 
+    return self
+  end)
+end
 
 local function listen(self, cons, port, opts)
   self.sessions = Queue:new()
@@ -36,5 +55,6 @@ return {
 	Proto = require('./proto'),
 	Client = require('./client'),
 	Server = Server,
+  connect = connect,
   listen = listen
 }

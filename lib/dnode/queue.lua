@@ -2,8 +2,8 @@ local core = require('core')
 
 local Queue = core.Object:extend()
 function Queue:initialize(initial_list)
-  self.first = 1
-  self.last =  0
+  self.first = 0
+  self.last =  -1
   self.list = initial_list or { }
 end
 
