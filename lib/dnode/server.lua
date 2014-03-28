@@ -87,12 +87,12 @@ function Server:createProto()
 		else
 			-- TODO: Stringify json?
       print('server - emit data', utils.dump(req))
-      --[[ local copy = { }
+      local copy = { }
       for k,v in pairs(req.callbacks) do
         if v and type(v) ~= 'function' then
           copy[k] = v
         end
-      end]]
+      end
       req.callbacks = copy
 			self:emit('data', json.encode(req))
 		end
