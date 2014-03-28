@@ -41,38 +41,12 @@ end
 function Protocol:handle(req)
 	local args = self.scrubber:unscrub(req, function(id)
     print('proto - handle id: ', id)
-    local cb = function(...)
+    return function(...)
       local args = {...}
       print('proto - req cb', id, utils.dump(args))
       self:request(id, args)
     end
-    self.callbacks.remote[id] = cb
-    return cb
   end)
-
-  local remote_cb, id
-
-  -- for k,v in pairs(self.callbacks.remote) do
-    -- if v == cb then
-      -- remote_cb = k
-    -- end
-  -- end
-	-- if remote_cb == nil then
-    -- id = #self.callbacks.remote.list + 1
-		-- local cb = function() 
-			-- -- TODO: Here args is probably wrong...
-       -- print('in cb')
-			-- self:request(id, args)
-		-- end	
--- 
-    -- self.callbacks.remote:rpush(cb)
-    -- print('remote-cb id', id)
-		-- remote_cb = self.wrap and self:wrap(cb, id) or cb
-  -- else
-    -- id = remote_cb
-    -- print('remote_cb k:', k)
-    -- remote_cb = self.callbacks.remote[id]
-  -- end	
 
   print('proto - req.method:', req.method, type(req.method))
   print('proto - handle args', utils.dump(args))
@@ -104,8 +78,7 @@ function Protocol:handle(req)
       end
     end
   elseif type(req.method) == 'number' then
-    local fn = self.scrubber.callbacks.list[req.method - 1]
-    print(utils.dump(self.scrubber.callbacks))
+    local fn = self.scrubber.callbacks.list[req.method]
     if fn == nil then
       self:emit('fail', 'no such method')
     else

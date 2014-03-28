@@ -87,6 +87,13 @@ function Server:createProto()
 		else
 			-- TODO: Stringify json?
       print('server - emit data', utils.dump(req))
+      --[[ local copy = { }
+      for k,v in pairs(req.callbacks) do
+        if v and type(v) ~= 'function' then
+          copy[k] = v
+        end
+      end]]
+      req.callbacks = copy
 			self:emit('data', json.encode(req))
 		end
 	end)
@@ -139,8 +146,10 @@ function Server:write(buf)
         print('server - cannot parse json buf:', err)
         self:destroy()
       end
-      print('server - write buf row', row)
-      self:handle(row)
+      if row then
+        print('server - write buf row', row)
+        self:handle(row)
+      end
     end
   end
 end

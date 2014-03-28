@@ -29,7 +29,7 @@ function Scrubber:scrub(obj)
     print('scruber - scrub node:', node.value, 'type:', type(node.value))
     if type(node.value) == 'function' then
       self.callbacks:rpush(node.value) 
-      local id = self.callbacks.last + 1
+      local id = self.callbacks.last 
 
       print('scruber - scrub node id:', id, 'path:', utils.dump(node.path))
       for k,v in pairs(node.path) do print('scruber - node.path:', k, v) end
@@ -63,16 +63,13 @@ function Scrubber:unscrub(msg, f)
     print('scrubber - unscrub node:', utils.dump(node))
     print('scrubber - unscrub path:', utils.dump(path))
     -- local pair =
-    print('scruber - callbacks:', utils.dump(self.callbacks))
-    print('scrubber - msg.callbacks', utils.dump(msg.callbacks))
     local id
-    for k,v in pairs(msg.callbacks) do
+    for k,v in pairs(msg and msg.callbacks or {}) do
       if path_equal(v, path) then
         id = k
         print('scrubber path id', id)
         node.value = f(id)
       end 
-      -- p[#p + 1] = k
     end 
   end)
   print(utils.dump(args))
