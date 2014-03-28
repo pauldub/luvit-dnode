@@ -1,9 +1,12 @@
 local Emitter = require('core').Emitter
-local Queue = require('./queue')
-local Scrubber = require('./scrubber')
-local json = require('json4lua/json4lua/json/json.lua')
+
 local table = require('table')
-local utils = require('utils')
+local json = require('json4lua/json4lua/json/json.lua')
+
+local Scrubber = require('./scrubber')
+
+local Logger = require('./logger')
+local logger = Logger:new('protocol')
 
 local Protocol = Emitter:extend()
 function Protocol:initialize(cons, opts)
@@ -23,13 +26,13 @@ function Protocol:initialize(cons, opts)
 end
 
 function Protocol:start()
-	print("protocol started")
+	logger.debug("protocol started")
 	self:request('methods', { self.instance } )
 end
 
 function Protocol:request(method, args)
 	local scrub = self.scrubber:scrub(args)
-  print('proto - request', method, utils.dump(scrub))	
+  logger.debug('request', method, scrub)	
 	self:emit('request', {
 		method = method,
 		arguments = scrub.arguments,
@@ -40,16 +43,16 @@ end
 
 function Protocol:handle(req)
 	local args = self.scrubber:unscrub(req, function(id)
-    print('proto - handle id: ', id)
+    logger.debug('handle id: ', id)
     return function(...)
       local args = {...}
-      print('proto - req cb', id, utils.dump(args))
+      logger.debug('req cb', id, args)
       self:request(id, args)
     end
   end)
 
-  print('proto - req.method:', req.method, type(req.method))
-  print('proto - handle args', utils.dump(args))
+  logger.debug('req.method:', req.method, type(req.method))
+  logger.debug('handle args', args)
 
   if req.method == 'methods' then
     -- Validate args.
@@ -60,18 +63,18 @@ function Protocol:handle(req)
     end
   elseif type(req.method) == 'string' then
     local method = self.instance[req.method]
-    print('proto - method:', method, 'type:', type(method))
+    logger.debug('method:', method, 'type:', type(method))
     if method and type(method) == 'function' then
-      print('proto - apply instance func:', req.method)
+      logger.debug('apply instance func:', req.method)
       local result
       local status, err = pcall(function()
         method(unpack(args), function(res)
-          print('proto - request res:', res)
+          logger.debug('request res:', res)
           result = res
         end)
       end) 
       if err then
-        print('proto - error:', err)
+        logger.debug('error:', err)
         -- TODO: return it?
       else
         return result

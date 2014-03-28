@@ -1,11 +1,13 @@
 local Emitter = require('core').Emitter
+
+local table = require('table')
 local fun = require('lua-functional/lua-functional')
-local table = require('table')
-local table = require('table')
-local utils = require('utils')
 
 local Queue = require('./queue')
 local Walk = require('./walk')
+
+local Logger = require('./logger')
+local logger = Logger:new('scrubber')
 
 local function copy_table(t)
   local copy = {}
@@ -26,21 +28,21 @@ function Scrubber:scrub(obj)
   local walker = Walk:new(obj)
 
   local walked = walker:walk(function(node)
-    print('scruber - scrub node:', node.value, 'type:', type(node.value))
+    logger.debug('scrub node:', node.value, 'type:', type(node.value))
     if type(node.value) == 'function' then
       self.callbacks:rpush(node.value) 
       local id = self.callbacks.last 
 
-      print('scruber - scrub node id:', id, 'path:', utils.dump(node.path))
-      for k,v in pairs(node.path) do print('scruber - node.path:', k, v) end
+      logger.debug('scrub node id:', id, 'path:', node.path)
+      for k,v in pairs(node.path) do logger.debug('node.path:', k, v) end
 
       paths[id] = copy_table(node.path)
 
       node.value = '[Function]'
     end
   end)
-  print('scruber - scrub walked', utils.dump(walked)) 
-  print('scruber - scrub walked', utils.dump(paths)) 
+  logger.debug('scrub walked', walked) 
+  logger.debug('scrub walked', paths) 
   return { arguments = walked, callbacks = paths, links = links }
 end
 
@@ -56,23 +58,23 @@ local function path_equal(p1, p2)
 end
 
 function Scrubber:unscrub(msg, f)
-  print('scrubber - unscrub msg', utils.dump(msg))
+  logger.debug('unscrub msg', msg)
   local walker = Walk:new(msg and msg.arguments or {})
   local args = walker:walk(function(node)
     local path = node and node.path or {}
-    print('scrubber - unscrub node:', utils.dump(node))
-    print('scrubber - unscrub path:', utils.dump(path))
+    logger.debug('unscrub node:', node)
+    logger.debug('unscrub path:', path)
     -- local pair =
     local id
     for k,v in pairs(msg and msg.callbacks or {}) do
       if path_equal(v, path) then
         id = k
-        print('scrubber path id', id)
+        logger.debug('scrubber path id', id)
         node.value = f(id)
       end 
     end 
   end)
-  print(utils.dump(args))
+  logger.debug(args)
   return args
 end
 

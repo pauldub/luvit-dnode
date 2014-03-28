@@ -1,8 +1,11 @@
 local Object = require('core').Object
+
 local table = require('table')
-local utils = require('utils')
 
 local Queue = require('./queue')
+
+local Logger = require('./logger')
+local logger = Logger:new('walk')
 
 local Node = Object:extend()
 
@@ -47,8 +50,8 @@ function Walk:_walk(obj, cb)
   local value = node.value 
   local value_type = type(value)
 
-  print('walk - value', value, value_type)
-  print('walk - value', utils.dump(node))
+  logger.debug('value', value, value_type)
+  logger.debug('value', node)
     
   if value_type == 'table' then
     local copy = { }
@@ -65,7 +68,7 @@ function Walk:_walk(obj, cb)
   elseif value_type == 'boolean' or value_type == 'string' or value_type == 'number' or value_type == 'function' then
     return value
   else
-    error('walk - ' .. value_type .. 'not handled')
+    error('' .. value_type .. 'not handled')
   end
 end
 

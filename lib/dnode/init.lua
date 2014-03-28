@@ -11,10 +11,10 @@ local function connect(self, port, block)
 
   socket = net.createConnection(port, function()
     socket:on('error', function(err)
-      print(err)
       self:emit('error', err)
       socket:done()
     end)  
+
     self.stream = socket
     socket:pipe(self)
     self:pipe(socket) 
@@ -29,16 +29,13 @@ local function listen(self, cons, port, opts)
     self.sessions:rpush(socket)
     local session_id = self.sessions.last  
     
-    print('sess id', session_id)
     d:on('end', function()
-      print('conn end', session_id)
       socket:destroy()
       self.sessions.list[session_id] = nil
       self.sessions = Queue:new(self.sessions.list)
     end)
 
     socket:on('error', function(err)
-      print(err)
       d:destroy()
       socket:done()
     end)
