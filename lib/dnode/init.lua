@@ -1,7 +1,7 @@
 local net = require('net')
+local bind = require('utils').bind
 
 local Server = require('./server')
-local Client = require('./client')
 local Queue = require('./queue')
 
 local function connect(self, port, block)
@@ -50,7 +50,6 @@ end
 
 return {
 	Proto = require('./proto'),
-	Client = require('./client'),
 	Server = Server,
   connect = connect,
   listen = listen

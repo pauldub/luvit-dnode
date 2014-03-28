@@ -17,6 +17,7 @@ end
 local Walk = Object:extend()
 
 function Walk:initialize(obj)
+	self.logger = logger
   self.path = {} 
 	self.obj = obj
   self.fns = { test = function() end }

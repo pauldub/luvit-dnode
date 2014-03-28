@@ -20,6 +20,7 @@ local Protocol = require('./proto')
 
 local Server = iStream:extend()
 function Server:initialize(cons, opts)
+	self.logger = logger
 	self.opts = opts or {}
 
   if type(cons) == 'function' then
@@ -58,11 +59,9 @@ function Server:createProto()
 	local proto = Protocol:new(function(proto, remote)
 		-- TODO: Check if self refers to the correct object
 		if self.ended then
-			logger.debug("proto ended")
+			logger.info("proto ended")
 			return
 		end
-
-    logger.debug('remote', remote)
 
 		local ref 
     if type(self.cons) == 'function' then
@@ -129,7 +128,7 @@ function Server:write(buf)
           row = json.decode(self._line)
         end)
         if err then
-          logger.debug('cannot parse json:', err)
+          logger.error('cannot parse json:', err)
           self:destroy()
         end
         logger.debug('write row', row)
@@ -146,7 +145,7 @@ function Server:write(buf)
         row = json.decode(buf)
       end)
       if err then
-        logger.debug('cannot parse json buf:', err)
+        logger.fail('cannot parse json buf:', err)
         self:destroy()
       end
       if row then
@@ -167,7 +166,7 @@ function Server:handle(row)
 		logger.debug("handle proto")
 		local status, err = pcall(function() self.proto:handle(row) end)
     if err then
-      logger.debug('error:', err)
+      logger.error('error:', err)
     end
 	end
 end

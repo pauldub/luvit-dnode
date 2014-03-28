@@ -10,6 +10,7 @@ local logger = Logger:new('protocol')
 
 local Protocol = Emitter:extend()
 function Protocol:initialize(cons, opts)
+	self.logger = logger
 	self.opts = opts or {}
 	self.remote = {}
 	self.callbacks = { locals = {}, remote = {} }

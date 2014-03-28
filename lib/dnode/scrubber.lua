@@ -19,6 +19,7 @@ end
 
 local Scrubber = Emitter:extend()
 function Scrubber:initialize(callbacks)
+	self.logger = logger
   self.callbacks = Queue:new(callbacks)
 end
 

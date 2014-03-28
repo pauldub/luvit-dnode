@@ -5,6 +5,7 @@ local default_log_levels = {
 	'debug', 'info', 'warn', 'error', 'fail'
 }
 
+local default_log_level = 'info'
 
 local StdOut = iStream:extend()
 function StdOut:write(data)
@@ -18,7 +19,7 @@ function Logger:initialize(name, opts)
 
 	self.name = name
 	self.levels = options.levels or default_log_levels
-	self.level = options.level and self:levelIndex(options.level) or 1
+	self.level = options.level or default_log_level
 	self.out = options.out or StdOut:new()
 
 	for k,level in pairs(self.levels) do
@@ -32,6 +33,9 @@ function Logger:initialize(name, opts)
 end
 
 function Logger:levelIndex(level) 
+	if type(level) == 'number' then
+		return level
+	end
 	if level == nil then
 		return
 	end
@@ -51,7 +55,11 @@ function Logger:levelIndex(level)
 end
 
 function Logger:activeLevel(level)
-	return self:levelIndex(level) >= self.level
+	if type(self.level) == number then
+		return self:levelIndex(level) >= self.level
+	else
+		return self:levelIndex(level) >= self:levelIndex(self.level)
+	end
 end
 
 function Logger:log(level, msg, ...)
