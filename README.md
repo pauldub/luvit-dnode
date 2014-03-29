@@ -1,6 +1,6 @@
 ## Luvit dnode
 
-This a port of dnode.js from substack. Dnode is a rpc protocol allowing clients and servers to communicate with each other.
+This a port of [dnode.js](https://github.com/substack/dnode) from [substack](http://substack.net/). dnode is a rpc system allowing clients and servers to communicate with each other. 
 
 It looks like the simple example is working but more work is needed. For example `dnode:connect` and `dnode:listen` options support is really weak, so far only a port can be specified, but more work on the internals must be done before. 
 
