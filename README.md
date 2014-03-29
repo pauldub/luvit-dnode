@@ -15,7 +15,7 @@ Things that don't work:
 
 - no support for links (yet).
 
-I decided to write a port of dnode for luvit after reading this article: [Top 10 inventions at Browserling](www.catonmat.net/blog/top-10-browserling-inventions/). My goal is to write upnode and airport aswell, and maybe seaport too.
+I decided to write a port of dnode for luvit after reading this article: [Top 10 inventions at Browserling](www.catonmat.net/blog/top-10-browserling-inventions/). My goal is to port upnode and airport aswell, and maybe seaport too.
 
 I am also wondering if luvit can also be used with [OpenResty](http://openresty.org), and allow one to forward urls to dnodes, or something like that.
 
