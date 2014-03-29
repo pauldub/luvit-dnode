@@ -1,6 +1,5 @@
 local exports = {}
 
--- local fiber = require('fiber')
 local dnode = require('..')
 local utils = require('utils')
 local asserts = require('bourbon/lib/asserts')
