@@ -1,9 +1,5 @@
 language: erlang
 
-env:
-  - LUA=""
-  - LUA="luajit"
-
 branches:
   only:
     - master
@@ -11,10 +7,14 @@ branches:
 install:
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
-  - sudo luarocks install luafilesystem
+
+before_script:
+  - mkdir bin/
   - curl http://luvit.io/dist/latest/ubuntu-latest/x86_64/luvit-bundled -o /bin/luvit
-  - chmod +x /bin/luvit
+  - chmod +x bin/luvit
   - curl https://github.com/dvv/luvit-lui/raw/master/lui -o /bin/lui
-  - chmod +x /bin/lui
+  - chmod +x bin/lui
+  - export PATH=$PATH:$PWD/bin
+  - lui
 
 script: "cd modules/bourbon && bin/bourbon -p ../../test"
