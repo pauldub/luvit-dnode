@@ -1,7 +1,6 @@
 local Emitter = require('core').Emitter
 
 local table = require('table')
-local json = require('json4lua/json4lua/json/json.lua')
 
 local Scrubber = require('./scrubber')
 

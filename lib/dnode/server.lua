@@ -2,19 +2,13 @@ local Emitter = require('core').Emitter
 local iStream = require('core').iStream
 
 local string = require('string')
-local json = require('json4lua/json4lua/json/json.lua')
+local json = require('json')
 
 local Queue = require('./queue')
 local Scrubber = require('./scrubber')
 
 local Logger = require('./logger')
 local logger = Logger:new('server')
-
-function print_keys(table)
-  for k,_ in pairs(table) do
-    logger.debug('key:', k)
-  end 
-end
 
 local Protocol = require('./proto')
 
@@ -96,7 +90,7 @@ function Server:createProto()
         end
       end
       req.callbacks = copy
-			self:emit('data', json.encode(req))
+			self:emit('data', json.stringify(req))
 		end
 	end)
 
@@ -125,7 +119,7 @@ function Server:write(buf)
       if c:byte() == 0x0a then
         local row
         local status, err = pcall(function()
-          row = json.decode(self._line)
+          row = json.parse(self._line)
         end)
         if err then
           logger.error('cannot parse json:', err)
@@ -142,7 +136,7 @@ function Server:write(buf)
     if handled == nil then
       local row
       local status, err = pcall(function()
-        row = json.decode(buf)
+        row = json.parse(buf)
       end)
       if err then
         logger.fail('cannot parse json buf:', err)
