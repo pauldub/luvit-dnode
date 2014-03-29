@@ -1,4 +1,6 @@
-## Luvit dnode
+## luvit-dnode
+
+[![Build Status](https://travis-ci.org/pauldub/luvit-dnode.svg?branch=master)](https://travis-ci.org/pauldub/luvit-dnode)
 
 This a port of [dnode.js](https://github.com/substack/dnode) from [substack](http://substack.net/). dnode is a rpc system allowing clients and servers to communicate with each other. 
 
