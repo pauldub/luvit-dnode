@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Luvit-dnode by pauldub</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Luvit-dnode</h1>
+        <p>Substack&#39;s dnode ported to luvit!</p>
+
+        <p class="view"><a href="https://github.com/pauldub/luvit-dnode">View the Project on GitHub <small>pauldub/luvit-dnode</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/pauldub/luvit-dnode/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/pauldub/luvit-dnode/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/pauldub/luvit-dnode">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a name="luvit-dnode" class="anchor" href="#luvit-dnode"><span class="octicon octicon-link"></span></a>luvit-dnode</h2>
+
+<p><a href="https://travis-ci.org/pauldub/luvit-dnode"><img src="https://travis-ci.org/pauldub/luvit-dnode.svg?branch=master" alt="Build Status"></a></p>
+
+<p>This a port of <a href="https://github.com/substack/dnode">dnode.js</a> from <a href="http://substack.net/">substack</a>. dnode is a rpc system allowing clients and servers to communicate with each other. </p>
+
+<p>It looks like the simple example is working but more work is needed. For example <code>dnode:connect</code> and <code>dnode:listen</code> options support is really weak, so far only a port can be specified, but more work on the internals must be done before. </p>
+
+<p>Things that are probably wrong:</p>
+
+<ul>
+<li>The scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -&gt; server are ok, I haven't tested it though.</li>
+<li>The walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.</li>
+<li>There is a small logger library, this is just actually used for debugging purposes and helping me understanding how things work. Actually they used to be print(dump(...)) statements the logger main purpose is toggling them.</li>
+<li>Bits of everything else.</li>
+</ul><p>Things that don't work:</p>
+
+<ul>
+<li>no support for links (yet).</li>
+</ul><p>I decided to write a port of dnode for luvit after reading this article: <a href="www.catonmat.net/blog/top-10-browserling-inventions/">Top 10 inventions at Browserling</a>. My goal is to port upnode and airport aswell, and maybe seaport too.</p>
+
+<p>I am also wondering if luvit can also be used with <a href="http://openresty.org">OpenResty</a>, and allow one to forward urls to dnodes, or something like that.</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<p>Install deps with <code>lui</code>, this will fetch dependencies under <code>modules/</code>. Lui is available at <a href="https://github.com/dvv/luvit-lui">dvv/luvit-lui</a>.</p>
+
+<h3>
+<a name="example-server" class="anchor" href="#example-server"><span class="octicon octicon-link"></span></a>Example Server</h3>
+
+<div class="highlight highlight-lua"><pre><span class="kd">local</span> <span class="n">dnode</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">'</span><span class="s">dnode'</span><span class="p">)</span>
+
+<span class="n">dnode</span><span class="p">:</span><span class="n">listen</span><span class="p">({</span>
+    <span class="n">hello</span> <span class="o">=</span> <span class="k">function</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
+        <span class="n">cb</span><span class="p">(</span><span class="s2">"</span><span class="s">hello world!"</span><span class="p">)</span>
+    <span class="k">end</span>
+<span class="p">},</span> <span class="mi">7070</span><span class="p">)</span>
+</pre></div>
+
+<h3>
+<a name="example-client" class="anchor" href="#example-client"><span class="octicon octicon-link"></span></a>Example client</h3>
+
+<div class="highlight highlight-lua"><pre><span class="kd">local</span> <span class="n">dnode</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">'</span><span class="s">dnode'</span><span class="p">)</span>
+
+<span class="n">dnode</span><span class="p">:</span><span class="n">connect</span><span class="p">(</span><span class="mi">7070</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+    <span class="n">remote</span><span class="p">.</span><span class="n">hello</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+    <span class="k">end</span><span class="p">)</span>
+<span class="k">end</span><span class="p">)</span>
+</pre></div>
+
+<p>See the <code>tests/</code> directory for more examples (TODO: Write more tests)</p>
+
+<h2>
+<a name="tests" class="anchor" href="#tests"><span class="octicon octicon-link"></span></a>Tests</h2>
+
+<p>Should write more tests, <code>bourbon</code> will eventually run them. For more informations on bourbon, see <a href="https://github.com/racker/luvit-bourbon">racker/luvit-bourbon</a>.</p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/pauldub">pauldub</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
