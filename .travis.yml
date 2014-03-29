@@ -15,6 +15,6 @@ before_script:
   - curl https://github.com/dvv/luvit-lui/raw/master/lui --location -o bin/lui
   - chmod +x bin/lui
   - export PATH=$PATH:$PWD/bin
-  - lui
+  - lui || true
 
 script: "cd modules/bourbon && bin/bourbon -p ../../test"
