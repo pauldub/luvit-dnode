@@ -1,6 +1,6 @@
 ## Luvit dnode
 
-This a port of dnode.js from substack. Dnode is a rpc protocol allowing client and servers to communicate with each other.
+This a port of dnode.js from substack. Dnode is a rpc protocol allowing clients and servers to communicate with each other.
 
 It looks like the simple example is working but more work is needed.
 
@@ -17,19 +17,31 @@ Things that don't work:
 
 ## Usage
 
-Install deps `lui` (see lui-url TODO: add lui-url)
+Install deps with `lui`, this will fetch dependencies under `modules/`. Lui is available at [dvv/luvit-lui](https://github.com/dvv/luvit-lui).
 
 ```
-Hello client
+local dnode = require('dnode')
+
+dnode:connect(7070, function(remote)
+	remote.hello(function(response)
+		print(response)
+	end)
+end)
 ```
 
 ```
-Hello server
+local dnode = require('dnode')
+
+dnode:listen({
+	hello = function(cb)
+		cb("hello world!")
+	end
+}, 7070)
 ```
 
-See the `examples/` directory for a simple example.
+See the `tests/` directory for more examples (TODO: Write more tests)
 
 ## Tests
 
-Should write more tests, `bourbon` will eventually run them. TODO: Link to bourbon 
+Should write more tests, `bourbon` will eventually run them. For more informations on bourbon, see [racker/luvit-bourbon](https://github.com/racker/luvit-bourbon).
 
