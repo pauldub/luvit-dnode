@@ -19,15 +19,7 @@ Things that don't work:
 
 Install deps with `lui`, this will fetch dependencies under `modules/`. Lui is available at [dvv/luvit-lui](https://github.com/dvv/luvit-lui).
 
-```
-local dnode = require('dnode')
-
-dnode:connect(7070, function(remote)
-	remote.hello(function(response)
-		print(response)
-	end)
-end)
-```
+### Example Server
 
 ```
 local dnode = require('dnode')
@@ -37,6 +29,18 @@ dnode:listen({
 		cb("hello world!")
 	end
 }, 7070)
+```
+
+### Example client
+
+```
+local dnode = require('dnode')
+
+dnode:connect(7070, function(remote)
+	remote.hello(function(response)
+		print(response)
+	end)
+end)
 ```
 
 See the `tests/` directory for more examples (TODO: Write more tests)
