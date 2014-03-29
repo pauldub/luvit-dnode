@@ -6,10 +6,10 @@ It looks like the simple example is working but more work is needed. For example
 
 Things that are probably wrong:
 
-- the scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -> server are ok, I haven't tested it though.
-- the walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.
-- There is a small logger library, this is just actually inteded for debugging purposes and helping me understanding how things work. Actually they were print(dump(...)) statements the logger main purpose is toggling them.
-- bits of everything else.
+- The scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -> server are ok, I haven't tested it though.
+- The walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.
+- There is a small logger library, this is just actually used for debugging purposes and helping me understanding how things work. Actually they used to be print(dump(...)) statements the logger main purpose is toggling them.
+- Bits of everything else.
 
 Things that don't work:
 
