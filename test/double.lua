@@ -33,7 +33,7 @@ exports['test_double'] = function(test)
 			asserts.equals(x, 20, 'double not equal')
 			asserts.equals(y, 20, 'double not equal')
 
-			server.net:close()
+			server:close()
 			test.done()
 		end)
 	end)

@@ -39,7 +39,7 @@ exports['test_null'] = function(test)
 				asserts.equals(n, 500, '50 * 10 == 500')
 
 				conn.stream:destroy()
-				server.net:close()
+				server:close()
 				test.done()
 			end)
 		end)

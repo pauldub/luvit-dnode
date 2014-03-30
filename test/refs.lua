@@ -11,7 +11,7 @@ exports['test_refs'] = function(test)
 		asserts.equals(remote.a, 1)
 		asserts.equals(remote.b, 2)
 
-		server.net:close()
+		server:close()
 		test.done()
 	end)
 end

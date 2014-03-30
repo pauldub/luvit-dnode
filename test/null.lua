@@ -5,7 +5,7 @@ local utils = require('utils')
 local asserts = require('bourbon/lib/asserts')
 
 local done = function(server, test)
-	server.net:close()
+	server:close()
 	test.done()
 end
 

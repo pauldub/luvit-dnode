@@ -39,7 +39,7 @@ function DNode:connect(port, block)
   end)
 end
 
-function DNode:listen(port, opts)
+function DNode:listen(port, ... --[[ ip, callback ]] )
   self.sessions = { } -- Queue:new()
   self.net = net.createServer(function(socket)
     local d = Server:new(self.cons, opts)
@@ -65,9 +65,13 @@ function DNode:listen(port, opts)
     d:pipe(socket)
   end)
 
-  self.net:listen(port)
+	self:on('end', function()
+		self.net:close()
+	end)
+	
+  self.net:listen(port, ...)
 
-  return self
+  return self.net
 end
 
 --[[local function new(self, cons, opts)

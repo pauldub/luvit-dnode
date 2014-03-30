@@ -21,7 +21,7 @@ exports['test_nested'] = function(test)
 				reply(n * 10)
 			end
 		}
-	end):listen(1337).net
+	end):listen(1337)
 
 	local server2 
 	local net2 = dnode:new(function(self, remote)
@@ -32,7 +32,7 @@ exports['test_nested'] = function(test)
 				reply(n * 20)
 			end
 		}
-	end):listen(1338).net
+	end):listen(1338)
 
 	local moo = Emitter:new()
 

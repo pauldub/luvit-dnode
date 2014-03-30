@@ -37,7 +37,7 @@ exports['test_object_refs'] = function(test)
 			rObj.f(13, function(ref)
 				asserts.equals(ref, 260)
 
-				server.net:close()
+				server:close()
 				test.done()
 			end)
 		end)

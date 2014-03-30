@@ -20,7 +20,7 @@ exports['test_client_server_calls'] = function(test)
 			asserts.not_ok(err)
 			asserts.equals(133, result)
 
-			server.net:close()
+			server:close()
 			test.done()
 		end)
 	end)
