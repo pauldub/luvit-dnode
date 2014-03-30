@@ -6,7 +6,7 @@ local default_log_levels = {
 }
 
 local default_log_level = 'info'
--- local default_log_level = 'debug'
+--local default_log_level = 'debug'
 
 local StdOut = iStream:extend()
 function StdOut:write(data)
