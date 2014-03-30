@@ -6,7 +6,7 @@ This a port of [dnode.js](https://github.com/substack/dnode) from [substack](htt
 
 It looks like the simple example is working but more work is needed. Right now a good portion of the node.js test suite has been ported, performance will be tested after implementation is correct enough (at least when client functions are accessible from server and directly piping nodes to each other is working). 
 
-After that I will cross test both implementations, running the test suite and interleaving node.js and luvit clients and servers.
+After that, I want to cross test both implementations by running the test suite and interleaving node.js and luvit clients and servers.
 
 A simple example server that should run on Heroku and that works fine on dokku is available: [pauldub/dnode-heroku-example](https://github.com/pauldub/dnode-heroku-example).
 
