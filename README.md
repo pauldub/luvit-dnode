@@ -11,11 +11,14 @@ Things that are probably wrong:
 - The scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -> server are ok, I haven't tested it though.
 - The walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.
 - There is a small logger library, this is just actually used for debugging purposes and helping me understanding how things work. Actually they used to be print(dump(...)) statements the logger main purpose is toggling them.
+- The arguments for `dnode:listen` and `dnode:connect` are not yet defined and atm sucks badly.
 - Bits of everything else.
 
 Things that don't work:
 
-- no support for links (yet).
+- No support for links (yet).
+- Server doesn't see client functions.
+- Cannot pipe dnodes to each other yet (using `dnode:new`), I don't know exactly why but it might be due to missing parts or messages going to the `handling_queue` and staying there.
 
 I decided to write a port of dnode for luvit after reading this article: [Top 10 inventions at Browserling](www.catonmat.net/blog/top-10-browserling-inventions/). My goal is to port upnode and airport aswell, and maybe seaport too.
 
