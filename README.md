@@ -33,11 +33,13 @@ Install deps with `lui`, this will fetch dependencies under `modules/`. Lui is a
 ```lua
 local dnode = require('dnode')
 
-dnode:listen({
+local server = dnode:new({
 	hello = function(cb)
 		cb("hello world!")
 	end
-}, 7070)
+})
+
+server.listen(7070)
 ```
 
 ### Example client
@@ -45,7 +47,9 @@ dnode:listen({
 ```lua
 local dnode = require('dnode')
 
-dnode:connect(7070, function(remote)
+local client = dnode:new()
+
+client.connect(7070, function(remote)
 	remote.hello(function(response)
 		print(response)
 	end)
