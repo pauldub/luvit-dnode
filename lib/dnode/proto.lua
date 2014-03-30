@@ -97,7 +97,7 @@ function Protocol:handleMethods(methods)
   for k,_ in pairs(self.remote) do
     self.remote[k] = nil
   end
-  for k,m in pairs(methods) do
+  for k,m in pairs(methods or {}) do
     self.remote[k] = m
   end
   
