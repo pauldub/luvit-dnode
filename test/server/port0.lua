@@ -6,7 +6,7 @@ local asserts = require('bourbon/lib/asserts')
 
 exports['test_port_0'] = function(test)
 	local port = 0
-	local node = dnode:new({})
+	local node = dnode:new()
 
 	node:listen(port, function()
 		local address = node.net:address()

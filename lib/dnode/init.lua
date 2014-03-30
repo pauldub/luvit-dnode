@@ -16,10 +16,17 @@ end
 
 local DNode = Server:extend()
 
-function DNode:connect(port, block)
+function DNode:connect(port, host, block)
+	if type(host) == 'function' and not block then
+		block = host
+		host = nil
+	end
+
+	host = host or '127.0.0.1'
+
   self:on('remote', block)
 
-  self.stream = net.createConnection(port, function()
+  self.stream = net.createConnection(port, host, function()
 		local socket = self.stream
 		self.id = randomId()
 
@@ -69,7 +76,18 @@ function DNode:listen(port, ... --[[ ip, callback ]] )
 		self.net:close()
 	end)
 	
-  self.net:listen(port, ...)
+  -- From net.lua but default ip to 127.0.0.1
+	local args = { ... }
+  if type(args[1]) == 'function' then
+    callback = args[1]
+  else
+    ip = args[1]
+    callback = args[2]
+  end
+
+	ip = ip or '127.0.0.1'
+
+  self.net:listen(port, ip, callback)
 
   return self.net
 end
