@@ -67,6 +67,6 @@ Things that are probably wrong:
 Things that don't work:
 
 - No support for links (yet).
-- Server doesn't see client functions.
+- ~~Server doesn't see client functions.~~ This should now be working correctly now, it was a problem in `lib/dnode/server.lua` and the way the handling queue was used.
 - Cannot pipe dnodes to each other yet (using `dnode:new`), I don't know exactly why but it might be due to missing parts or messages going to the `handling_queue` and staying there.
 
