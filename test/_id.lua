@@ -13,8 +13,8 @@ exports['test_id'] = function(test)
 	local client = dnode:new():connect(1337, function(remote, conn)
 		asserts.equals(remote._id, 1337)
 
-		server:close()
-		test.done()
+		conn:destroy()
+		server:close(test.done)
 	end)
 end
 

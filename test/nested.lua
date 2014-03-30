@@ -13,8 +13,8 @@ local Emitter = require('core').Emitter
 
 exports['test_nested'] = function(test)
 	local server1 
-	local net1 = dnode:new(function(self, remote)
-		server1 = self
+	local net1 = dnode:new(function(self, remote, conn)
+		server1 = conn
 
 		return {
 			timesTen = function(n, reply)
@@ -24,8 +24,8 @@ exports['test_nested'] = function(test)
 	end):listen(1337)
 
 	local server2 
-	local net2 = dnode:new(function(self, remote)
-		server2 = self
+	local net2 = dnode:new(function(self, remote, conn)
+		server2 = conn
 
 		return {
 			timesTwenty = function(n, reply)

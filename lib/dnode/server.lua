@@ -28,8 +28,6 @@ function Server:initialize(cons, opts)
   self.readable = true
 	self.writable = true
 
-	self.queue = {}
-
   process.nextTick(function()
 	  if self.ended then 
 		  return 
@@ -38,19 +36,19 @@ function Server:initialize(cons, opts)
 	  self.proto = self:createProto()
     logger.debug('starting')
 	  self.proto:start()
-  
-	  if self.handle_queue == nil then
+
+	  if self.queue == nil then
 		  return
 	  end
 
 	  -- TODO: Use lua async or lua functional for list ops.
-	  for i,row in ipairs(self.queue) do
-		  self:handle(self.queue[i])
+	  for i,row in ipairs(self.queue.list) do
+		  self:handle(row)
 	  end
   end) end
 
 function Server:createProto()
-	local proto = Protocol:new(function(proto, remote)
+	local proto = Protocol:new(function(remote, proto)
 		-- TODO: Check if self refers to the correct object
 		if self.ended then
 			logger.info("proto ended")
@@ -59,7 +57,7 @@ function Server:createProto()
 
 		local ref 
     if type(self.cons) == 'function' then
-      ref = self.cons(self, proto, remote)
+      ref = self.cons(proto, remote, self)
     else
       ref = self.cons or {}
     end
@@ -157,8 +155,8 @@ function Server:handle(row)
 	logger.debug('handle row', row and row.arguments)
 	if self.proto == nil then
 		logger.debug("handle no proto")
-		self.handle_queue = self.handle_queue or Queue:new()
-		self.handle_queue:rpush(row)
+		self.queue = self.queue or Queue:new()
+		self.queue:rpush(row)
 		return
 	else
 		logger.debug("handle proto")

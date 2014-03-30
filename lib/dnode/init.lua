@@ -26,30 +26,33 @@ function DNode:connect(port, host, block)
 
   self:on('remote', block)
 
-  self.stream = net.createConnection(port, host, function()
-		local socket = self.stream
-		self.id = randomId()
+  local stream = net.createConnection(port, host)
+	self.id = randomId()
 
-    socket:on('error', function(err)
-      self:emit('error', err)
-      socket:done()
-    end)  
+	stream:on('error', function(err)
+		self:emit('error', err)
+		stream:done()
+	end)  
 
-		self:on('end', function()
-      socket:done()
-		end)
+	self:on('end', function()
+		stream:done()
+	end)
 
-    socket:pipe(self)
-    self:pipe(socket) 
+	self.stream = stream
+	self:pipe(stream) 
+	stream:pipe(self)
 
-    return self
-  end)
+	return self
 end
 
 function DNode:listen(port, ... --[[ ip, callback ]] )
   self.sessions = { } -- Queue:new()
+
+	local cons = self.cons
+	local opts = self.opts
+
   self.net = net.createServer(function(socket)
-    local d = Server:new(self.cons, opts)
+    local d = Server:new(cons, opts)
 		d.id = randomId()
 		while self.sessions[d.id] do
 			d.id = randomId()
@@ -62,7 +65,17 @@ function DNode:listen(port, ... --[[ ip, callback ]] )
       self.sessions[d.id] = nil
     end)
 
+		d:on('local', function(ref)
+			self.net:emit('local', ref, d)
+		end)
+
+		d:on('remote', function(remote)
+			self.net:emit('remote', remote, d)
+		end)
+
     socket:on('error', function(err)
+			-- TODO: Look for EPIPE  and continue.
+			-- TODO: Emit error, dont close socket.
       d:destroy()
       socket:done()
     end)
