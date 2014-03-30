@@ -17,9 +17,10 @@ exports['test_object_refs'] = function(test)
 		getObject = function(f)
 			f(obj)
 		end
-	}):listen(1337)
+	})
 
-	local client = dnode:new():connect(1337, function(remote, conn)
+	local client = dnode:new()
+	client:on('remote', function(remote, conn)
 		remote.getObject(function(rObj)
 			asserts.equals(rObj.a, 1)
 			asserts.equals(rObj.b, 2)
@@ -37,11 +38,14 @@ exports['test_object_refs'] = function(test)
 			rObj.f(13, function(ref)
 				asserts.equals(ref, 260)
 
-				server:close()
+				server:destroy()
 				test.done()
 			end)
 		end)
 	end)
+
+	client:pipe(server)
+	server:pipe(client)
 end
 
 return exports

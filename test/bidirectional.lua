@@ -19,22 +19,22 @@ exports['test_bidirectionnal'] = function(test)
 		}
 	end)
 
-	server:listen(1337, function() 
-		local client = dnode:new({
-			x = function(f, b) 
-				f(20)
-			end
-		})
+	local client = dnode:new({
+		x = function(f, b) 
+			f(20)
+		end
+	})
 
-		client:connect(1337, function(remote, conn)
-			remote.timesX(3, function(res)
-				asserts.equals(res, 60, 'result of 20 * 3 == 60')
-				server:destroy()
-				test.done()
-			end)
+	client:on('remote', function(remote, conn)
+		remote.timesX(3, function(res)
+			asserts.equals(res, 60, 'result of 20 * 3 == 60')
+			server:destroy()
+			test.done()
 		end)
 	end)
 
+	client:pipe(server)
+	server:pipe(client)
 end
 
 return exports

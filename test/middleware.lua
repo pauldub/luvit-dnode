@@ -16,10 +16,10 @@ exports['test_middleware'] = function(test)
 		asserts.ok(not conn.zing)
 		asserts.ok(not client.moo)
 
-		conn:on('remote', function(remote, c)
+		conn:on('remote', function(c, b, d)
+			asserts.ok(conn.zing)
 			-- Hmmm, I'm wondering what makes this fail.
 			-- asserts.ok(client.moo)
-			-- asserts.ok(conn.zing)
 		end)
 
 		return { baz = 42 }
@@ -27,21 +27,21 @@ exports['test_middleware'] = function(test)
 
 	server:on('local', function(client, conn)
 		conn.zing = true
-		print('1', conn.id)
 	end)
 
 	server:on('local', function(client, conn)
 		client.moo = true
-		print('2', conn.id)
 	end)
 
-	server:listen(1337)
-
-	local client = dnode:new():connect(1337, function(remote, conn)
+	local client = dnode:new()
+	client:on('remote', function(remote, conn)
 		asserts.ok(remote.baz)
 	
 		done(server, test)
 	end)
+	
+	client:pipe(server)
+	server:pipe(client)
 end
 
 return exports

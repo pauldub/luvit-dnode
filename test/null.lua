@@ -5,7 +5,7 @@ local utils = require('utils')
 local asserts = require('bourbon/lib/asserts')
 
 local done = function(server, test)
-	server:close()
+	server:destroy()
 	test.done()
 end
 
@@ -26,9 +26,10 @@ exports['test_simple_server_and_client'] = function(test)
 			asserts.equals(n, 5)
 			cb(n * 10)
 		end
-	}):listen(1337)
+	})
 
-	local client = dnode:new():connect(1337, function(remote, conn)
+	local client = dnode:new()
+	client:on('remote', function(remote, conn)
 		remote.moo(function(x)
 			asserts.equals(x, 100, 'remote moo == 100')
 		end)
@@ -43,6 +44,8 @@ exports['test_simple_server_and_client'] = function(test)
 		end)
 	end)
 
+	client:pipe(server)
+	server:pipe(client)
 	--server:on('error', function() done(server, test) end)
 	--client:on('error', function() done(server, test) end)
 end

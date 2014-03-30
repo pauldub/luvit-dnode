@@ -13,9 +13,10 @@ exports['test_double'] = function(test)
 				end)
 			end)
 		end
-	}):listen(1337)
+	})
 
-	local client = dnode:new():connect(1337, function(remote, conn)
+	local client = dnode:new()
+	client:on('remote', function(remote, conn)
 		remote.z(function(x, f)
 			f(x * 2)
 		end, function(x, f)
@@ -33,10 +34,13 @@ exports['test_double'] = function(test)
 			asserts.equals(x, 20, 'double not equal')
 			asserts.equals(y, 20, 'double not equal')
 
-			server:close()
+			server:destroy()
 			test.done()
 		end)
 	end)
+
+	client:pipe(server)
+	server:pipe(client)
 end
 
 return exports
