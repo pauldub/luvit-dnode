@@ -59,7 +59,7 @@
     <span class="k">end</span>
 <span class="p">})</span>
 
-<span class="n">server</span><span class="p">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">7070</span><span class="p">)</span>
+<span class="n">server</span><span class="p">:</span><span class="n">listen</span><span class="p">(</span><span class="mi">7070</span><span class="p">)</span>
 </pre></div>
 
 <h3>
@@ -69,7 +69,7 @@
 
 <span class="kd">local</span> <span class="n">client</span> <span class="o">=</span> <span class="n">dnode</span><span class="p">:</span><span class="n">new</span><span class="p">()</span>
 
-<span class="n">client</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="mi">7070</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+<span class="n">client</span><span class="p">:</span><span class="n">connect</span><span class="p">(</span><span class="mi">7070</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">remote</span><span class="p">,</span> <span class="n">conn</span><span class="p">)</span>
     <span class="n">remote</span><span class="p">.</span><span class="n">hello</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
     <span class="k">end</span><span class="p">)</span>
