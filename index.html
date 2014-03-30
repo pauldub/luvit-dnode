@@ -33,25 +33,13 @@
 
 <p><a href="https://travis-ci.org/pauldub/luvit-dnode"><img src="https://travis-ci.org/pauldub/luvit-dnode.svg?branch=master" alt="Build Status"></a></p>
 
-<p>This a port of <a href="https://github.com/substack/dnode">dnode.js</a> from <a href="http://substack.net/">substack</a>. dnode is a rpc system allowing clients and servers to communicate with each other. </p>
+<p>This a port of <a href="https://github.com/substack/dnode">dnode.js</a> from <a href="http://substack.net/">substack</a>. dnode is a rpc system allowing clients and servers to communicate with each other.  I decided to write this port for luvit after reading this article: <a href="www.catonmat.net/blog/top-10-browserling-inventions/">Top 10 inventions at Browserling</a>. My goal is to port upnode and airport aswell, and maybe seaport too.</p>
 
-<p>It looks like the simple example is working but more work is needed. For example <code>dnode:connect</code> and <code>dnode:listen</code> options support is really weak, so far only a port can be specified, but more work on the internals must be done before. </p>
+<p>It looks like the simple example is working but more work is needed. Right now a good portion of the node.js test suite has been ported, performance will be tested after implementation is correct enough (at least when client functions are accessible from server and directly piping nodes to each other is working). </p>
 
-<p>Things that are probably wrong:</p>
+<p>After that I will cross test both implementations, running the test suite and interleaving node.js and luvit clients and servers.</p>
 
-<ul>
-<li>The scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -&gt; server are ok, I haven't tested it though.</li>
-<li>The walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.</li>
-<li>There is a small logger library, this is just actually used for debugging purposes and helping me understanding how things work. Actually they used to be print(dump(...)) statements the logger main purpose is toggling them.</li>
-<li>The arguments for <code>dnode:listen</code> and <code>dnode:connect</code> are not yet defined and atm sucks badly.</li>
-<li>Bits of everything else.</li>
-</ul><p>Things that don't work:</p>
-
-<ul>
-<li>No support for links (yet).</li>
-<li>Server doesn't see client functions.</li>
-<li>Cannot pipe dnodes to each other yet (using <code>dnode:new</code>), I don't know exactly why but it might be due to missing parts or messages going to the <code>handling_queue</code> and staying there.</li>
-</ul><p>I decided to write a port of dnode for luvit after reading this article: <a href="www.catonmat.net/blog/top-10-browserling-inventions/">Top 10 inventions at Browserling</a>. My goal is to port upnode and airport aswell, and maybe seaport too.</p>
+<p>A simple example server that should run on Heroku and that works fine on dokku is available: <a href="https://github.com/pauldub/dnode-heroku-example">pauldub/dnode-heroku-example</a>.</p>
 
 <p>I am also wondering if luvit can also be used with <a href="http://openresty.org">OpenResty</a>, and allow one to forward urls to dnodes, or something like that.</p>
 
@@ -65,11 +53,13 @@
 
 <div class="highlight highlight-lua"><pre><span class="kd">local</span> <span class="n">dnode</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">'</span><span class="s">dnode'</span><span class="p">)</span>
 
-<span class="n">dnode</span><span class="p">:</span><span class="n">listen</span><span class="p">({</span>
+<span class="kd">local</span> <span class="n">server</span> <span class="o">=</span> <span class="n">dnode</span><span class="p">:</span><span class="n">new</span><span class="p">({</span>
     <span class="n">hello</span> <span class="o">=</span> <span class="k">function</span><span class="p">(</span><span class="n">cb</span><span class="p">)</span>
         <span class="n">cb</span><span class="p">(</span><span class="s2">"</span><span class="s">hello world!"</span><span class="p">)</span>
     <span class="k">end</span>
-<span class="p">},</span> <span class="mi">7070</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="n">server</span><span class="p">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">7070</span><span class="p">)</span>
 </pre></div>
 
 <h3>
@@ -77,19 +67,45 @@
 
 <div class="highlight highlight-lua"><pre><span class="kd">local</span> <span class="n">dnode</span> <span class="o">=</span> <span class="nb">require</span><span class="p">(</span><span class="s1">'</span><span class="s">dnode'</span><span class="p">)</span>
 
-<span class="n">dnode</span><span class="p">:</span><span class="n">connect</span><span class="p">(</span><span class="mi">7070</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
+<span class="kd">local</span> <span class="n">client</span> <span class="o">=</span> <span class="n">dnode</span><span class="p">:</span><span class="n">new</span><span class="p">()</span>
+
+<span class="n">client</span><span class="p">.</span><span class="n">connect</span><span class="p">(</span><span class="mi">7070</span><span class="p">,</span> <span class="k">function</span><span class="p">(</span><span class="n">remote</span><span class="p">)</span>
     <span class="n">remote</span><span class="p">.</span><span class="n">hello</span><span class="p">(</span><span class="k">function</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
     <span class="k">end</span><span class="p">)</span>
 <span class="k">end</span><span class="p">)</span>
 </pre></div>
 
-<p>See the <code>tests/</code> directory for more examples (TODO: Write more tests)</p>
+<p>See the <code>tests/</code> directory for more examples.</p>
 
 <h2>
 <a name="tests" class="anchor" href="#tests"><span class="octicon octicon-link"></span></a>Tests</h2>
 
 <p>Should write more tests, <code>bourbon</code> will eventually run them. For more informations on bourbon, see <a href="https://github.com/racker/luvit-bourbon">racker/luvit-bourbon</a>.</p>
+
+<h2>
+<a name="current-status" class="anchor" href="#current-status"><span class="octicon octicon-link"></span></a>Current status</h2>
+
+<p>Things that work:</p>
+
+<ul>
+<li>What is currently tested, see <code>test/</code> and <code>test/server</code> directories.</li>
+</ul><p>Things that are probably wrong:</p>
+
+<ul>
+<li>The scrubber might not be exactly right, it doesn't handle links, indexes starts at 1 due to lua table index. I dont't think callbacks from client -&gt; server are ok, I haven't tested it though.</li>
+<li>The walker might not be right too. I've ported it from the ruby version of dnode and some small parts are missing.</li>
+<li>There is a small logger library, this is just actually used for debugging purposes and helping me understanding how things work. Actually they used to be print(dump(...)) statements the logger main purpose is toggling them.</li>
+<li>
+<del>The arguments for <code>dnode:listen</code> and <code>dnode:connect</code> are not yet defined and atm sucks badly.</del> <code>dnode:listen</code> and <code>dnode:connect</code> now work more or less like the node.js version and those arguments orders should be supported: <code>port</code>, <code>port, cb</code>, <code>port, host, cb</code> or <code>{ port = p, host = h }, cb</code>. TODO: Test dnode initialization arguments.</li>
+<li>Bits of everything else.</li>
+</ul><p>Things that don't work:</p>
+
+<ul>
+<li>No support for links (yet).</li>
+<li>Server doesn't see client functions.</li>
+<li>Cannot pipe dnodes to each other yet (using <code>dnode:new</code>), I don't know exactly why but it might be due to missing parts or messages going to the <code>handling_queue</code> and staying there.</li>
+</ul>
       </section>
       <footer>
         <p>This project is maintained by <a href="https://github.com/pauldub">pauldub</a></p>
