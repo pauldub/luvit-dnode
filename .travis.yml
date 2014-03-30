@@ -4,16 +4,18 @@ branches:
   only:
     - master
 
-install:
+before_install:
   - sudo apt-get install luajit
   - sudo apt-get install luarocks
 
-before_script:
+install:
   - mkdir bin/
   - curl http://luvit.io/dist/latest/ubuntu-latest/x86_64/luvit-bundled -o bin/luvit
   - chmod +x bin/luvit
   - curl https://github.com/dvv/luvit-lui/raw/master/lui --location -o bin/lui
   - chmod +x bin/lui
+
+before_script:
   - export PATH=$PATH:$PWD/bin
   - lui || true
 
