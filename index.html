@@ -103,7 +103,8 @@
 
 <ul>
 <li>No support for links (yet).</li>
-<li>Server doesn't see client functions.</li>
+<li>
+<del>Server doesn't see client functions.</del> This should now be working correctly now, it was a problem in <code>lib/dnode/server.lua</code> and the way the handling queue was used.</li>
 <li>Cannot pipe dnodes to each other yet (using <code>dnode:new</code>), I don't know exactly why but it might be due to missing parts or messages going to the <code>handling_queue</code> and staying there.</li>
 </ul>
       </section>
