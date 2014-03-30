@@ -27,7 +27,7 @@ local server = dnode:new({
 	end
 })
 
-server.listen(7070)
+server:listen(7070)
 ```
 
 ### Example client
@@ -37,7 +37,7 @@ local dnode = require('dnode')
 
 local client = dnode:new()
 
-client.connect(7070, function(remote)
+client:connect(7070, function(remote, conn)
 	remote.hello(function(response)
 		print(response)
 	end)
