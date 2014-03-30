@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/pauldub/luvit-dnode.svg?branch=master)](https://travis-ci.org/pauldub/luvit-dnode)
 
-This a port of [dnode.js](https://github.com/substack/dnode) from [substack](http://substack.net/). dnode is a rpc system allowing clients and servers to communicate with each other.  I decided to write this port for luvit after reading this article: [Top 10 inventions at Browserling](www.catonmat.net/blog/top-10-browserling-inventions/). My goal is to port upnode and airport aswell, and maybe seaport too.
+This a port of [dnode.js](https://github.com/substack/dnode) from [substack](http://substack.net/). dnode is a rpc system allowing clients and servers to communicate with each other.  I decided to write this port for luvit after reading this article: [Top 10 inventions at Browserling](http://www.catonmat.net/blog/top-10-browserling-inventions/). My goal is to port upnode and airport aswell, and maybe seaport too.
 
 It looks like the simple example is working but more work is needed. Right now a good portion of the node.js test suite has been ported, performance will be tested after implementation is correct enough (at least when client functions are accessible from server and directly piping nodes to each other is working). 
 
