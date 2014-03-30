@@ -13,7 +13,7 @@ local Emitter = require('core').Emitter
 
 exports['test_nested'] = function(test)
 	local server1 
-	local net1 = dnode:listen(function(self, remote)
+	local net1 = dnode:new(function(self, remote)
 		server1 = self
 
 		return {
@@ -21,10 +21,10 @@ exports['test_nested'] = function(test)
 				reply(n * 10)
 			end
 		}
-	end, 1337).net
+	end):listen(1337).net
 
 	local server2 
-	local net2 = dnode:listen(function(self, remote)
+	local net2 = dnode:new(function(self, remote)
 		server2 = self
 
 		return {
@@ -32,12 +32,12 @@ exports['test_nested'] = function(test)
 				reply(n * 20)
 			end
 		}
-	end, 1338).net
+	end):listen(1338).net
 
 	local moo = Emitter:new()
 
-	local client1 = dnode:connect(1337, function(remote1, conn)
-		local client2 = dnode:connect(1338, function(remote2, conn)
+	local client1 = dnode:new():connect(1337, function(remote1, conn)
+		local client2 = dnode:new():connect(1338, function(remote2, conn)
 			moo:on('hi', function(x)
 				remote1.timesTen(x, function(res)
 					asserts.equals(res, 5000, 'emitted value times ten')

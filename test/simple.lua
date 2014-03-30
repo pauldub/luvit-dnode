@@ -10,7 +10,7 @@ local done = function(server, test)
 end
 
 exports['test_simple_server_and_client'] = function(test)
-	local server = dnode:listen({ 
+	local server = dnode:new({ 
 		timesTen = function(n, reply)
 			asserts.equal(n, 50)
 			reply(n * 10)
@@ -24,9 +24,9 @@ exports['test_simple_server_and_client'] = function(test)
 			asserts.equals(n, 5)
 			cb(n * 10)
 		end
-	}, 1337)
+	}):listen(1337)
 
-	local client = dnode:connect(1337, function(remote, conn)
+	local client = dnode:new():connect(1337, function(remote, conn)
 		remote.moo(function(x)
 			asserts.equals(x, 100, 'remote moo == 100')
 		end)

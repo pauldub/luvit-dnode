@@ -13,13 +13,13 @@ exports['test_object_refs'] = function(test)
 		end
 	}
 
-	local server = dnode:listen({ 
+	local server = dnode:new({ 
 		getObject = function(f)
 			f(obj)
 		end
-	}, 1337)
+	}):listen(1337)
 
-	local client = dnode:connect(1337, function(remote, conn)
+	local client = dnode:new():connect(1337, function(remote, conn)
 		remote.getObject(function(rObj)
 			asserts.equals(rObj.a, 1)
 			asserts.equals(rObj.b, 2)

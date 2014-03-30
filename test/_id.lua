@@ -8,8 +8,9 @@ local asserts = require('bourbon/lib/asserts')
 -- read/write doesn't do it. So for now lets use simple tcp 
 -- servers. Just remember to close them.
 exports['test_id'] = function(test)
-	local server = dnode:listen({ _id = 1337 }, 1337)
-	local client = dnode:connect(1337, function(remote, conn)
+	local server = dnode:new({ _id = 1337 }):listen(1337)
+
+	local client = dnode:new():connect(1337, function(remote, conn)
 		asserts.equals(remote._id, 1337)
 
 		server.net:close()

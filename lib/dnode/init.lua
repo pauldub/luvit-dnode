@@ -14,9 +14,9 @@ local function randomId()
 	return s
 end
 
-local function connect(self, port, block, cons)
-  local self = Server:new(cons or {}, opts)
+local DNode = Server:extend()
 
+function DNode:connect(port, block)
   self:on('remote', block)
 
   self.stream = net.createConnection(port, function()
@@ -39,10 +39,10 @@ local function connect(self, port, block, cons)
   end)
 end
 
-local function listen(self, cons, port, opts)
+function DNode:listen(port, opts)
   self.sessions = { } -- Queue:new()
   self.net = net.createServer(function(socket)
-    local d = Server:new(cons, opts)
+    local d = Server:new(self.cons, opts)
 		d.id = randomId()
 		while self.sessions[d.id] do
 			d.id = randomId()
@@ -70,14 +70,15 @@ local function listen(self, cons, port, opts)
   return self
 end
 
-local function new(self, cons, opts)
+--[[local function new(self, cons, opts)
 	return Server:new(cons or {}, opts)
-end
+	end]]
 
-return {
+
+return DNode --[[{
 	Proto = require('./proto'),
 	Server = Server,
   connect = connect,
   listen = listen,
 	new = new
-}
+}]]

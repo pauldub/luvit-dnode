@@ -12,7 +12,7 @@ end
 -- This test is not complete yet: see https://github.com/substack/dnode/blob/master/test/middleware.js
 -- It looks like conn:on('remote', ...) is not called :(
 exports['test_middleware'] = function(test)
-	local server = dnode:listen(function(self, client, conn)
+	local server = dnode:new(function(self, client, conn)
 		self:on('local', function(client, conn)
 			conn.zing = true
 		end)
@@ -35,10 +35,10 @@ exports['test_middleware'] = function(test)
 		end)
 
 		return { baz = 42 }
-	end, 1337)
+	end):listen(1337)
 
 
-	local client = dnode:connect(1337, function(remote, conn)
+	local client = dnode:new():connect(1337, function(remote, conn)
 		asserts.ok(remote.baz)
 	
 		done(server, test)

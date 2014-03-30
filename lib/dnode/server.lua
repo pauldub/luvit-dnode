@@ -21,7 +21,7 @@ function Server:initialize(cons, opts)
 	  self.cons = cons
   else
     self.cons = function()
-      return cons
+      return cons or {}
     end
   end
 
