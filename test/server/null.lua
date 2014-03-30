@@ -5,7 +5,7 @@ local utils = require('utils')
 local asserts = require('bourbon/lib/asserts')
 
 exports['test_null'] = function(test)
-	local server = dnode:listen({
+	local server = dnode:new({
 		empty = nil,
 
 		timesTen = function(n, reply)
@@ -23,9 +23,9 @@ exports['test_null'] = function(test)
 
 			cb(n * 10, nil)
 		end
-	}, 1337)
+	}):listen(1337)
 
-	local client = dnode:connect(1337, function(remote, conn)
+	local client = dnode:new():connect(1337, function(remote, conn)
 		asserts.ok(conn.id)
 
 		remote.moo(function(x)
