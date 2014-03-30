@@ -19,4 +19,4 @@ before_script:
   - export PATH=$PATH:$PWD/bin
   - lui || true
 
-script: "modules/bourbon/bin/bourbon -p test -p test/server"
+script: "modules/bourbon/bin/bourbon -p test/server -p test/"
