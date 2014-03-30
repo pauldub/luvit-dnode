@@ -162,7 +162,7 @@ function Server:handle(row)
 		return
 	else
 		logger.debug("handle proto")
-		local status, err = pcall(function() self.proto:handle(row) end)
+		local status, err = pcall(function() self.proto:handle(row or {}) end)
     if err then
       logger.error('error:', err)
     end
