@@ -54,6 +54,10 @@ function Protocol:handle(req)
   logger.debug('req.method:', req.method, type(req.method))
   logger.debug('handle args', args)
 
+	if tonumber(req.method) then
+		req.method = tonumber(req.method)
+	end
+
   if req.method == 'methods' then
     -- Validate args.
 		self:handleMethods(args[1])
@@ -97,6 +101,7 @@ function Protocol:handleMethods(methods)
     self.remote[k] = m
   end
   
+	logger.debug('remote', self.remote)
   self:emit('remote', self.remote)
 end
 

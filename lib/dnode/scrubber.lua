@@ -50,7 +50,7 @@ local function path_equal(p1, p2)
 end
 
 function Scrubber:unscrub(msg, f)
-  logger.debug('unscrub msg', msg)
+  logger.debug('unscrub msg', msg.arguments)
   local walker = Walk:new(msg and msg.arguments or {})
   local args = walker:walk(function(node)
     local path = node and node.path or {}

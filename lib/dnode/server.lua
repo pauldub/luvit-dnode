@@ -61,7 +61,7 @@ function Server:createProto()
     if type(self.cons) == 'function' then
       ref = self.cons(self, proto, remote)
     else
-      ref = {}
+      ref = self.cons or {}
     end
 
 		self:emit('local', ref, self)
@@ -82,15 +82,16 @@ function Server:createProto()
 			self:emit('data', req)
 		else
 			-- TODO: Stringify json?
-      logger.debug('emit data', req)
+      logger.debug('emit data', req.arguments)
       local copy = { }
       for k,v in pairs(req.callbacks) do
-        if v and type(v) ~= 'function' then
+        if v then
           copy[k] = v
         end
       end
       req.callbacks = copy
-			self:emit('data', json.stringify(req))
+			logger.debug('request json', json.stringify(req))
+			self:emit('data', json.stringify(req) .. '\n')
 		end
 	end)
 
@@ -109,6 +110,8 @@ function Server:write(buf)
   if self.ended then
     return
   end
+
+	logger.debug('write buf', buf)
 
   if buf and type(buf) == 'string' then
     if self._line == nil then
@@ -133,7 +136,7 @@ function Server:write(buf)
         self._line = self._line .. c
       end
     end)
-    if handled == nil then
+    --[[ if handled == nil then
       local row
       local status, err = pcall(function()
         row = json.parse(buf)
@@ -143,14 +146,15 @@ function Server:write(buf)
         self:destroy()
       end
       if row then
-        logger.debug('write buf row', row)
+        logger.debug('write buf row', row.arguments)
         self:handle(row)
-      end
-    end
+			end
+    end]]
   end
 end
 
 function Server:handle(row)
+	logger.debug('handle row', row.arguments)
 	if self.proto == nil then
 		logger.debug("handle no proto")
 		self.handle_queue = self.handle_queue or Queue:new()

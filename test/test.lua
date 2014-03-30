@@ -7,7 +7,7 @@ local asserts = require('bourbon/lib/asserts')
 exports['test_client_server_calls'] = function(test)
 	local port = 3094
 
-	dnode:listen({
+	local server = dnode:listen({
 		zing = function(n, cb)
 			asserts.equals(33, n)
 
@@ -20,6 +20,7 @@ exports['test_client_server_calls'] = function(test)
 			asserts.not_ok(err)
 			asserts.equals(133, result)
 
+			server.net:close()
 			test.done()
 		end)
 	end)

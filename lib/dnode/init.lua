@@ -4,11 +4,10 @@ local bind = require('utils').bind
 local Server = require('./server')
 local Queue = require('./queue')
 
-local function connect(self, port, block)
-  local self = Server:new({}, opts)
+local function connect(self, port, block, cons)
+  local self = Server:new(cons or {}, opts)
 
   self:on('remote', block)
-
   socket = net.createConnection(port, function()
     socket:on('error', function(err)
       self:emit('error', err)
@@ -24,8 +23,9 @@ end
 
 local function listen(self, cons, port, opts)
   self.sessions = Queue:new()
-  self.server = net.createServer(function(socket)
+  self.net = net.createServer(function(socket)
     local d = Server:new(cons, opts)
+
     self.sessions:rpush(socket)
     local session_id = self.sessions.last  
     
@@ -44,13 +44,20 @@ local function listen(self, cons, port, opts)
     socket:pipe(d)
     d:pipe(socket)
   end)
-  self.server:listen(port)
+
+  self.net:listen(port)
+
   return self
+end
+
+local function new(self, cons, opts)
+	return Server:new(cons or {}, opts)
 end
 
 return {
 	Proto = require('./proto'),
 	Server = Server,
   connect = connect,
-  listen = listen
+  listen = listen,
+	new = new
 }
