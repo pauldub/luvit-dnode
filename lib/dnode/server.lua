@@ -154,7 +154,7 @@ function Server:write(buf)
 end
 
 function Server:handle(row)
-	logger.debug('handle row', row.arguments)
+	logger.debug('handle row', row and row.arguments)
 	if self.proto == nil then
 		logger.debug("handle no proto")
 		self.handle_queue = self.handle_queue or Queue:new()
