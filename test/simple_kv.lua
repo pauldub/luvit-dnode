@@ -55,18 +55,36 @@ exports['test_kv_server_can_listen'] = function(test)
 
   server:listen(0, function()
 	  local client = dnode:new()
-    client:connect(server.net:address().port, function(remote, conn)
-      print(utils.dump(server))      
-      remote.fetch('foo', function(old_val)
-        asserts.equals(old_val, 'default')
-        asserts.equals(server.db.foo, 'default')
 
-        conn:destroy()
-        server:destroy()
-        test.done()
-      end, 'default')
+    local address = server.net:address()
+    asserts.ok(address)
+    asserts.ok(address.port)
+
+    client:connect(address.port, function(remote, conn)
+      conn:destroy()
+      server:destroy()
+      test.done()
 	  end)
   end)
+end
+
+exports['test_kv_server_fetch'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.fetch('foo', function(old_val)
+      asserts.equals(old_val, 'default')
+      asserts.equals(server.db.foo, 'default')
+
+      conn:destroy()
+      server:destroy()
+      test.done()
+    end, 'default')
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
 end
 
 return exports
