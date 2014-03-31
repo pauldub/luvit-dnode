@@ -78,12 +78,78 @@ exports['test_kv_server_can_listen'] = function(test)
   end)
 end
 
-exports['test_kv_server_fetch'] = function(test)
+exports['test_kv_server_load'] = function(test)
 	local server = KvServer()
 
   local client = dnode:new()
   client:on('remote', function(remote, conn)
     remote.store('foo', 'bar', function()
+      remote.load('foo', function(val)
+        asserts.equals(val, 'bar')
+        asserts.equals(server.db.foo, 'bar')
+
+        conn:destroy()
+        server:destroy()
+        test.done()
+      end)
+    end)
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
+end
+
+exports['test_kv_server_load_returns_nil'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.load('foo', function(val)
+      asserts.equals(val, nil)
+      asserts.equals(server.db.foo, nil)
+
+      conn:destroy()
+      server:destroy()
+      test.done()
+    end)
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
+end
+
+exports['test_kv_server_store'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.store('foo', 'bar', function(old_value)
+      asserts.equals(old_value, nil)
+      asserts.equals(server.db.foo, 'bar')
+
+      remote.store('foo', 'baz', function(old_value)
+        asserts.equals(old_value, 'bar')
+        asserts.equals(server.db.foo, 'baz')
+
+        conn:destroy()
+        server:destroy()
+        test.done()
+      end)
+    end)
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
+end
+
+exports['test_kv_server_fetch'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.store('foo', 'bar', function(old_value)
+      asserts.equals(old_value, nil)
+
       remote.fetch('foo', function(val)
         asserts.equals(val, 'bar')
         asserts.equals(server.db.foo, 'bar')
@@ -151,6 +217,58 @@ exports['test_kv_server_fetch_block_function'] = function(test)
       test.done()
     end, function(reply)
       reply('default')
+    end)
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
+end
+
+exports['test_kv_server_delete'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.store('foo', 'bar', function(old_value)
+      asserts.equals(old_value, nil)
+      asserts.equals(server.db.foo, 'bar')
+
+      remote.delete('foo', function(val)
+        asserts.equals(val, 'bar')
+        asserts.equals(server.db.foo, nil)
+
+        conn:destroy()
+        server:destroy()
+        test.done()
+      end)
+    end)
+  end)
+
+  client:pipe(server)
+  server:pipe(client)
+end
+
+exports['test_kv_server_has_key'] = function(test)
+	local server = KvServer()
+
+  local client = dnode:new()
+  client:on('remote', function(remote, conn)
+    remote.has_key('foo', function(exist)
+      asserts.ok(not exists)
+    end)
+
+    remote.store('foo', 'bar', function(old_value)
+      asserts.equals(old_value, nil)
+      asserts.equals(server.db.foo, 'bar')
+
+      remote.has_key('foo', function(exist)
+        asserts.ok(exist)
+        asserts.equals(server.db.foo, 'bar')
+
+        conn:destroy()
+        server:destroy()
+        test.done()
+      end)
     end)
   end)
 
