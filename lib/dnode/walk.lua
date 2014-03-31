@@ -35,14 +35,6 @@ function Walk:walk(cb)
   return self:_walk(self.obj, cb) 
 end
 
-local function copy_table(t)
-  local copy = {}
-  for k, v in pairs(t) do
-    copy[k] = v
-  end
-  return copy
-end
-
 function Walk:_walk(obj, cb)
   local node = Node:new({ value = obj, path = self.path })
 

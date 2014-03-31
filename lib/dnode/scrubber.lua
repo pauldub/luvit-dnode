@@ -1,21 +1,12 @@
 local Emitter = require('core').Emitter
 
 local table = require('table')
-local fun = require('lua-functional/lua-functional')
-
 local Queue = require('./queue')
 local Walk = require('./walk')
+local copy_table = require('./utils').copy_table
 
 local Logger = require('./logger')
 local logger = Logger:new('scrubber')
-
-local function copy_table(t)
-  local copy = {}
-  for k, v in pairs(t) do
-    copy[k] = v
-  end
-  return copy
-end
 
 local Scrubber = Emitter:extend()
 function Scrubber:initialize(callbacks)
@@ -35,7 +26,7 @@ function Scrubber:scrub(obj)
       local id = self.callbacks.last 
 
       logger.debug('scrub node id:', id, 'path:', node.path)
-      for k,v in pairs(node.path) do logger.debug('node.path:', k, v) end
+      for k,v in pairs(node.path) do logger.debug('node.path:', { key = k, value = v }) end
 
       paths[id] = copy_table(node.path)
 
@@ -59,7 +50,7 @@ local function path_equal(p1, p2)
 end
 
 function Scrubber:unscrub(msg, f)
-  logger.debug('unscrub msg', msg)
+  logger.debug('unscrub msg', msg and msg.arguments)
   local walker = Walk:new(msg and msg.arguments or {})
   local args = walker:walk(function(node)
     local path = node and node.path or {}

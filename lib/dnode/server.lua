@@ -2,19 +2,13 @@ local Emitter = require('core').Emitter
 local iStream = require('core').iStream
 
 local string = require('string')
-local json = require('json4lua/json4lua/json/json.lua')
+local json = require('json')
 
 local Queue = require('./queue')
 local Scrubber = require('./scrubber')
 
 local Logger = require('./logger')
 local logger = Logger:new('server')
-
-function print_keys(table)
-  for k,_ in pairs(table) do
-    logger.debug('key:', k)
-  end 
-end
 
 local Protocol = require('./proto')
 
@@ -27,14 +21,12 @@ function Server:initialize(cons, opts)
 	  self.cons = cons
   else
     self.cons = function()
-      return cons
+      return cons or {}
     end
   end
 
   self.readable = true
 	self.writable = true
-
-	self.queue = {}
 
   process.nextTick(function()
 	  if self.ended then 
@@ -44,19 +36,19 @@ function Server:initialize(cons, opts)
 	  self.proto = self:createProto()
     logger.debug('starting')
 	  self.proto:start()
-  
-	  if self.handle_queue == nil then
+
+	  if self.queue == nil then
 		  return
 	  end
 
 	  -- TODO: Use lua async or lua functional for list ops.
-	  for i,row in ipairs(self.queue) do
-		  self:handle(self.queue[i])
+	  for i,row in ipairs(self.queue.list) do
+		  self:handle(row)
 	  end
   end) end
 
 function Server:createProto()
-	local proto = Protocol:new(function(proto, remote)
+	local proto = Protocol:new(function(remote, proto)
 		-- TODO: Check if self refers to the correct object
 		if self.ended then
 			logger.info("proto ended")
@@ -65,9 +57,9 @@ function Server:createProto()
 
 		local ref 
     if type(self.cons) == 'function' then
-      ref = self.cons(self, proto, remote)
+      ref = self.cons(proto, remote, self)
     else
-      ref = {}
+      ref = self.cons or {}
     end
 
 		self:emit('local', ref, self)
@@ -88,15 +80,16 @@ function Server:createProto()
 			self:emit('data', req)
 		else
 			-- TODO: Stringify json?
-      logger.debug('emit data', req)
+      logger.debug('emit data', req.arguments)
       local copy = { }
       for k,v in pairs(req.callbacks) do
-        if v and type(v) ~= 'function' then
+        if v then
           copy[k] = v
         end
       end
       req.callbacks = copy
-			self:emit('data', json.encode(req))
+			logger.debug('request json', json.stringify(req))
+			self:emit('data', json.stringify(req) .. '\n')
 		end
 	end)
 
@@ -116,6 +109,8 @@ function Server:write(buf)
     return
   end
 
+	logger.debug('write buf', buf)
+
   if buf and type(buf) == 'string' then
     if self._line == nil then
       self._line = ''
@@ -125,7 +120,7 @@ function Server:write(buf)
       if c:byte() == 0x0a then
         local row
         local status, err = pcall(function()
-          row = json.decode(self._line)
+          row = json.parse(self._line)
         end)
         if err then
           logger.error('cannot parse json:', err)
@@ -139,32 +134,33 @@ function Server:write(buf)
         self._line = self._line .. c
       end
     end)
-    if handled == nil then
+    --[[ if handled == nil then
       local row
       local status, err = pcall(function()
-        row = json.decode(buf)
+        row = json.parse(buf)
       end)
       if err then
         logger.fail('cannot parse json buf:', err)
         self:destroy()
       end
       if row then
-        logger.debug('write buf row', row)
+        logger.debug('write buf row', row.arguments)
         self:handle(row)
-      end
-    end
+			end
+    end]]
   end
 end
 
 function Server:handle(row)
+	logger.debug('handle row', row and row.arguments)
 	if self.proto == nil then
 		logger.debug("handle no proto")
-		self.handle_queue = self.handle_queue or Queue:new()
-		self.handle_queue:rpush(row)
+		self.queue = self.queue or Queue:new()
+		self.queue:rpush(row)
 		return
 	else
 		logger.debug("handle proto")
-		local status, err = pcall(function() self.proto:handle(row) end)
+		local status, err = pcall(function() self.proto:handle(row or {}) end)
     if err then
       logger.error('error:', err)
     end

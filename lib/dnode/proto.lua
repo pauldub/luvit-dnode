@@ -1,7 +1,6 @@
 local Emitter = require('core').Emitter
 
 local table = require('table')
-local json = require('json4lua/json4lua/json/json.lua')
 
 local Scrubber = require('./scrubber')
 
@@ -55,6 +54,10 @@ function Protocol:handle(req)
   logger.debug('req.method:', req.method, type(req.method))
   logger.debug('handle args', args)
 
+	if tonumber(req.method) then
+		req.method = tonumber(req.method)
+	end
+
   if req.method == 'methods' then
     -- Validate args.
 		self:handleMethods(args[1])
@@ -94,10 +97,11 @@ function Protocol:handleMethods(methods)
   for k,_ in pairs(self.remote) do
     self.remote[k] = nil
   end
-  for k,m in pairs(methods) do
+  for k,m in pairs(methods or {}) do
     self.remote[k] = m
   end
   
+	logger.debug('remote', self.remote)
   self:emit('remote', self.remote)
 end
 
