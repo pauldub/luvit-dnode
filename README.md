@@ -44,7 +44,7 @@ client:connect(7070, function(remote, conn)
 end)
 ```
 
-See the `tests/` directory for more examples.
+See the `tests/` directory for more examples. There is a simple key-value database server in `test/simple__kv.lua` most other tests are from the node.js version.
 
 ## Tests
 
@@ -68,5 +68,5 @@ Things that don't work:
 
 - No support for links (yet).
 - ~~Server doesn't see client functions.~~ This should now be working correctly now, it was a problem in `lib/dnode/server.lua` and the way the handling queue was used.
-- Cannot pipe dnodes to each other yet (using `dnode:new`), I don't know exactly why but it might be due to missing parts or messages going to the `handling_queue` and staying there.
+- ~~Cannot pipe dnodes to each other yet (using `dnode:new`), I don't know exactly why but it might be due to missing parts or messages going to the `handling_queue` and staying there.~~ This should be fine too by now.
 
